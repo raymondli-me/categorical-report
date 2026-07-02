@@ -63,6 +63,7 @@ write_bibliography <- function(file = "references.bib", format = c("bibtex", "ap
     out <- c(out,
       paste("##", t$name), "",
       t$brief, "",
+      if (!is.null(t$interpretation)) paste0("*Interpretation.* ", t$interpretation) else "", "",
       paste0("**Formula.** $", t$formula, "$"), "",
       "**Algorithm.**", "", paste0(seq_along(t$algorithm), ". ", t$algorithm), "",
       paste0("**Inputs.** ", t$inputs,
