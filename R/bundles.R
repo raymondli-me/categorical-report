@@ -15,7 +15,7 @@
 #' @param prefix table-number prefix, e.g. "Table ".
 #' @return (invisibly) the file path.
 #' @export
-mca_appendix <- function(fit, file = "MCA_appendix_tables.docx", prefix = "Table ") {
+mca_appendix <- function(fit, file = "MCA_appendix_tables.docx", prefix = "Table ", ellipse_B = 2000) {
   tabs <- list(
     list(x = apa_dimension_poles(fit),  title = "MCA dimension poles and Benzecri-adjusted variance explained"),
     list(x = apa_cluster_profiles(fit), title = "Hierarchical cluster profiles and characteristic codes",
@@ -37,7 +37,7 @@ mca_appendix <- function(fit, file = "MCA_appendix_tables.docx", prefix = "Table
          note = "|Z| > 1.96 flags an atypical group mean on that dimension."),
     list(x = apa_eta(fit),             title = "Correlation ratio (eta^2), F, and permutation p by space",
          note = "eta^2 = share of inertia explained by the grouping; p from permuted labels."),
-    list(x = apa_ellipse_overlap(fit), title = "Overlap of 95% bootstrap confidence ellipses (D1 x D2)",
+    list(x = apa_ellipse_overlap(fit, B = ellipse_B), title = sprintf("Overlap of 95%% bootstrap confidence ellipses, D1 x D2 (B = %d)", ellipse_B),
          note = "Non-overlapping ellipses indicate distinguishable group mean positions.")))
   for (i in seq_along(tabs)) tabs[[i]]$number <- paste0(prefix, i)   # generic sequential numbering
   apa_bundle(tabs, file); invisible(file)
@@ -113,7 +113,18 @@ export_all <- function(fit, dir = "mca_outputs", methods = TRUE, three_d = TRUE,
   }
 
   ## tables (Word)
-  try(mca_appendix(fit, file.path(Td, "appendix_tables.docx")), silent = TRUE)
+  try(mca_appendix(fit, file.path(Td, "appendix_tables.docx"), ellipse_B = ellipse_B), silent = TRUE)
+
+  ## reproducibility: record the exact settings that produced these outputs
+  .set <- apa_settings(fit, extra = list(
+    "Ellipse bootstrap replicates (B)" = ellipse_B,
+    "Figure PDF copies"                = pdf,
+    "Colour 3D rendered"               = three_d,
+    "Methods handbook rendered"        = methods))
+  utils::write.csv(.set, file.path(Dd, "analysis_settings.csv"), row.names = FALSE)
+  try(apa_table(.set, file.path(Td, "analysis_settings.docx"), number = "Table",
+                title = "Analysis settings (reproducibility record)",
+                note = "The exact parameters used to produce every table and figure in this bundle."), silent = TRUE)
 
   ## figures: base-R PNG + PDF
   gs <- function(name, fn, w = 7, h = 6) {

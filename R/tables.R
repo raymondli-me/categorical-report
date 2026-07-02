@@ -110,10 +110,28 @@ apa_eta <- function(fit, digits = 4) {
 
 #' Pairwise overlap of 95% bootstrap confidence ellipses for group means.
 #' @export
-apa_ellipse_overlap <- function(fit, dims = c(1, 2)) {
-  o <- categorical::mca_ellipses(fit, dims)$overlap
+apa_ellipse_overlap <- function(fit, dims = c(1, 2), B = 2000) {
+  o <- categorical::mca_ellipses(fit, dims, B = B)$overlap
   data.frame("Group 1" = o$g1, "Group 2" = o$g2,
              "95% ellipses overlap" = ifelse(o$overlap, "yes", "no"),
+             check.names = FALSE, row.names = NULL)
+}
+
+#' Analysis settings table (reproducibility): what parameters produced these outputs.
+#' @param fit an mca_fit; @param extra named list of extra settings (e.g. ellipse B).
+#' @export
+apa_settings <- function(fit, extra = NULL) {
+  cl <- fit$call
+  vals <- c(list(
+    "N (segments)"                        = fit$n,
+    "Active categories"                   = fit$n_cats,
+    "Clusters (k)"                        = cl$k,
+    "Retained dimensions"                 = cl$ndim,
+    "Min. category count (specific MCA)"  = cl$min_n,
+    "Grouping variable"                   = if (is.null(cl$group)) "none" else cl$group,
+    "Random seed"                         = cl$seed,
+    "Between-cluster inertia (%)"         = fit$between_inertia), extra)
+  data.frame(Setting = names(vals), Value = as.character(unlist(vals)),
              check.names = FALSE, row.names = NULL)
 }
 
