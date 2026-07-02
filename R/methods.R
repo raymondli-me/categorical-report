@@ -139,7 +139,7 @@ methods_document <- function(dir = ".", keys = NULL) {
   k <- .mkeys(keys); f <- c()
   f <- c(f, methods_overview(file.path(dir, "methods_overview.docx"), k))
   f <- c(f, methods_tables(file.path(dir, "methods_tables.docx"), k))
-  f <- c(f, methods_handbook(file.path(dir, "methods_handbook.docx"), k, formats = c("docx", "html")))
+  f <- c(f, methods_handbook(file.path(dir, "methods_handbook.docx"), k, formats = c("docx", "html", "pdf")))
   f <- c(f, write_bibliography(file.path(dir, "references.bib"), "bibtex", k))
   f <- c(f, write_bibliography(file.path(dir, "references_apa.txt"), "apa", k))
   invisible(f)
