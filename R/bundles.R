@@ -95,7 +95,7 @@ export_all <- function(fit, dir = "mca_outputs", methods = TRUE, zip = TRUE) {
   }
 
   ## tables (Word)
-  mca_appendix(fit, file.path(Td, "appendix_tables.docx"))
+  try(mca_appendix(fit, file.path(Td, "appendix_tables.docx")), silent = TRUE)
 
   ## figures: base-R PNG + PDF
   gs <- function(name, fn, w = 7, h = 6) {
