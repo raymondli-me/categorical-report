@@ -35,7 +35,7 @@
   }
   if (!is.null(note))
     ft <- flextable::add_footer_lines(ft, values = flextable::as_paragraph(flextable::as_i("Note. "), note))
-  flextable::set_table_properties(ft, layout = "autofit")
+  flextable::set_table_properties(ft, layout = "autofit", align = align)  # table BLOCK position on page (flextable defaults to center)
 }
 
 # internal: add a numbered + titled table block to an officer doc
