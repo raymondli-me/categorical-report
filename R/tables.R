@@ -91,3 +91,47 @@ apa_coordinates <- function(fit, digits = 3) {
              D1 = round(m$coord_D1, digits), D2 = round(m$coord_D2, digits), D3 = round(m$coord_D3, digits),
              check.names = FALSE, row.names = NULL)
 }
+
+#' Geometric typicality Z by dimension x group (|Z| > 1.96 is atypical).
+#' @export
+apa_typicality <- function(fit, digits = 2) {
+  m <- categorical::mca_typicality(fit)
+  data.frame(Dimension = rownames(m), round(as.data.frame.matrix(m), digits),
+             check.names = FALSE, row.names = NULL)
+}
+
+#' Correlation ratio (eta^2), F, and permutation p by space.
+#' @export
+apa_eta <- function(fit, digits = 4) {
+  e <- categorical::mca_eta(fit)
+  data.frame(Space = e$space, "eta^2" = round(e$eta2, digits), F = round(e$F, 2),
+             "Permutation p" = signif(e$perm_p, 3), check.names = FALSE, row.names = NULL)
+}
+
+#' Pairwise overlap of 95% bootstrap confidence ellipses for group means.
+#' @export
+apa_ellipse_overlap <- function(fit, dims = c(1, 2)) {
+  o <- categorical::mca_ellipses(fit, dims)$overlap
+  data.frame("Group 1" = o$g1, "Group 2" = o$g2,
+             "95% ellipses overlap" = ifelse(o$overlap, "yes", "no"),
+             check.names = FALSE, row.names = NULL)
+}
+
+#' Adjusted Rand Index matrix across a named list of fits (or cluster vectors).
+#' @param fits named list of mca_fit objects or integer cluster vectors.
+#' @export
+apa_ari_matrix <- function(fits, digits = 3) {
+  cl <- function(x) if (is.list(x) && !is.null(x$clusters)) x$clusters else x
+  k <- names(fits)
+  M <- outer(k, k, Vectorize(function(a, b) round(categorical::mca_ari(cl(fits[[a]]), cl(fits[[b]])), digits)))
+  df <- as.data.frame(M, stringsAsFactors = FALSE); names(df) <- k
+  cbind(Fit = k, df)
+}
+
+#' Cluster-count selection by between-inertia gain (HCPC diagnostic).
+#' @export
+apa_inertia_gain <- function(fit, digits = 1) {
+  g <- fit$gain_tab
+  data.frame("k (clusters)" = g$k, "Between-inertia %" = round(g$between_pct, digits),
+             "Gain vs k-1 (pp)" = round(g$gain, digits), check.names = FALSE, row.names = NULL)
+}

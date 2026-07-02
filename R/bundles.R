@@ -21,6 +21,8 @@ mca_appendix <- function(fit, file = "MCA_appendix_tables.docx", prefix = "Table
     list(x = apa_cluster_profiles(fit), title = "Hierarchical cluster profiles and characteristic codes",
          note = sprintf("N = %d segments.", fit$n)),
     list(x = apa_eigenvalues(fit),      title = "Eigenvalues and retained dimensions (Benzecri-adjusted)"),
+    list(x = apa_inertia_gain(fit),     title = "Cluster-count selection by between-inertia gain (HCPC)",
+         note = "k is chosen at the last large gain before diminishing returns."),
     list(x = apa_contributions(fit),    title = "Category contributions to each dimension (%)",
          note = "Contributions sum to 100% within a dimension; sorted by peak contribution."),
     list(x = apa_cos2(fit),             title = "Squared cosines (cos2): quality of representation by dimension",
@@ -30,7 +32,13 @@ mca_appendix <- function(fit, file = "MCA_appendix_tables.docx", prefix = "Table
     list(x = categorical::mca_frequencies(fit, long = TRUE), title = "Frequency of coded categories by group (% within group)"),
     list(x = apa_cluster_by_period(fit),                     title = "Cluster by group distribution"),
     list(x = categorical::mca_top_group(fit),                title = "Top over-represented categories per group (adjusted residuals)"),
-    list(x = categorical::mca_distribution(fit),             title = "Segment distribution across group and cluster (row-level hierarchical shares)")))
+    list(x = categorical::mca_distribution(fit),             title = "Segment distribution across group and cluster (row-level hierarchical shares)"),
+    list(x = apa_typicality(fit),      title = "Geometric typicality Z by dimension and group",
+         note = "|Z| > 1.96 flags an atypical group mean on that dimension."),
+    list(x = apa_eta(fit),             title = "Correlation ratio (eta^2), F, and permutation p by space",
+         note = "eta^2 = share of inertia explained by the grouping; p from permuted labels."),
+    list(x = apa_ellipse_overlap(fit), title = "Overlap of 95% bootstrap confidence ellipses (D1 x D2)",
+         note = "Non-overlapping ellipses indicate distinguishable group mean positions.")))
   for (i in seq_along(tabs)) tabs[[i]]$number <- paste0(prefix, i)   # generic sequential numbering
   apa_bundle(tabs, file); invisible(file)
 }

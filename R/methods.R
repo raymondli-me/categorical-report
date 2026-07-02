@@ -64,6 +64,12 @@ write_bibliography <- function(file = "references.bib", format = c("bibtex", "ap
   writeLines(categorical::mca_bibliography(.mkeys(keys), format = format), file); invisible(file)
 }
 
+#' Curated methods overview (one row per technique) -> Word.
+#' @export
+methods_overview <- function(file = "methods_overview.docx", keys = NULL)
+  apa_table(categorical::mca_overview(.mkeys(keys)), file, number = "Table",
+            title = "Methods overview: technique, what it answers, function, and citation")
+
 # assemble the handbook as (pandoc) markdown, one section per technique
 .handbook_md <- function(keys) {
   na0 <- function(x) if (is.null(x) || is.na(x)) "" else x
@@ -116,6 +122,7 @@ methods_handbook <- function(file = "methods_handbook.docx", keys = NULL, native
 #' @export
 methods_document <- function(dir = ".", keys = NULL) {
   k <- .mkeys(keys); f <- c()
+  f <- c(f, methods_overview(file.path(dir, "methods_overview.docx"), k))
   f <- c(f, methods_tables(file.path(dir, "methods_tables.docx"), k))
   f <- c(f, methods_handbook(file.path(dir, "methods_handbook.docx"), k))
   f <- c(f, write_bibliography(file.path(dir, "references.bib"), "bibtex", k))
