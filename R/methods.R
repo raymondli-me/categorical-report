@@ -105,8 +105,10 @@ methods_handbook <- function(file = "methods_handbook.docx", keys = NULL, native
   keys <- .mkeys(keys); md <- .handbook_md(keys)
   if (native && requireNamespace("rmarkdown", quietly = TRUE) && rmarkdown::pandoc_available()) {
     mdf <- tempfile(fileext = ".Rmd"); writeLines(md, mdf)
-    rmarkdown::render(mdf, output_format = "word_document",
-                      output_file = normalizePath(file, mustWork = FALSE), quiet = TRUE)
+    outdir <- dirname(file); if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
+    rmarkdown::render(mdf, output_format = "word_document",       # existing ABSOLUTE dir + basename (render changes cwd)
+                      output_file = basename(file),
+                      output_dir  = normalizePath(outdir), quiet = TRUE)
   } else {                                                     # text fallback (no typeset math)
     message("  [note] handbook equations are PLAIN TEXT -- rmarkdown/pandoc not found for native Word math.")
     doc <- officer::read_docx()
