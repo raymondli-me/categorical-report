@@ -103,7 +103,7 @@ methods_overview <- function(file = "methods_overview.docx", keys = NULL)
 #' @export
 methods_handbook <- function(file = "methods_handbook.docx", keys = NULL, native = TRUE) {
   keys <- .mkeys(keys); md <- .handbook_md(keys)
-  if (native && requireNamespace("rmarkdown", quietly = TRUE) && nzchar(Sys.which("pandoc"))) {
+  if (native && requireNamespace("rmarkdown", quietly = TRUE) && rmarkdown::pandoc_available()) {
     mdf <- tempfile(fileext = ".Rmd"); writeLines(md, mdf)
     rmarkdown::render(mdf, output_format = "word_document",
                       output_file = normalizePath(file, mustWork = FALSE), quiet = TRUE)
