@@ -51,13 +51,13 @@ mca_appendix <- function(fit, file = "MCA_appendix_tables.docx", prefix = "Table
 #' @param fit an mca_fit; @param dir output directory; @param format "emf" or "pptx".
 #' @return (invisibly) the file paths written.
 #' @export
-mca_figures <- function(fit, dir = ".", format = c("emf", "pptx")) {
+mca_figures <- function(fit, dir = ".", format = c("emf", "pptx"), B = 400) {
   format <- match.arg(format); ext <- format; f <- character()
   f <- c(f, save_editable(categorical::plot_scree(fit),
                           file.path(dir, paste0("Fig_scree.", ext)),      format, 6.6, 4.6))
-  f <- c(f, save_editable(categorical::plot_map(fit, c(1,2), bw = TRUE, ellipse = "centroid", legend = FALSE),
+  f <- c(f, save_editable(categorical::plot_map(fit, c(1,2), bw = TRUE, ellipse = "centroid", legend = FALSE, B = B),
                           file.path(dir, paste0("Fig_map_D1D2.", ext)),   format, 7, 6.6))
-  f <- c(f, save_editable(categorical::plot_map(fit, c(1,3), bw = TRUE, ellipse = "centroid", legend = FALSE),
+  f <- c(f, save_editable(categorical::plot_map(fit, c(1,3), bw = TRUE, ellipse = "centroid", legend = FALSE, B = B),
                           file.path(dir, paste0("Fig_map_D1D3.", ext)),   format, 7, 6.6))
   f <- c(f, save_editable(categorical::plot_dendrogram(fit, bw = TRUE),
                           file.path(dir, paste0("Fig_dendrogram.", ext)), format, 7, 5))
@@ -89,11 +89,16 @@ plot_map_3d <- function(fit, dir = ".") {
 #' .docx), <dir>/figures (scree/maps/dendrogram/3D as PNG+PDF, plus editable EMF),
 #' <dir>/methods (methods tables + handbook + bibliography). Returns the .zip path.
 #'
-#' @param fit an mca_fit; @param dir output folder; @param methods include methods docs;
+#' @param fit an mca_fit; @param dir output folder.
+#' @param methods include methods docs (tables + pandoc handbook + bib). Set FALSE to skip the slow pandoc step.
+#' @param three_d render the reticulate colour-3D map. Set FALSE if reticulate/python stalls.
+#' @param pdf also write PDF copies of the base-R figures (FALSE = PNG only, ~2x faster figures).
+#' @param ellipse_B bootstrap replicates for the map confidence ellipses (lower = faster; 400 looks identical to 1000).
 #' @param zip also produce <dir>.zip.
 #' @return (invisibly) the zip path (or the directory if zip=FALSE).
 #' @export
-export_all <- function(fit, dir = "mca_outputs", methods = TRUE, zip = TRUE) {
+export_all <- function(fit, dir = "mca_outputs", methods = TRUE, three_d = TRUE,
+                       pdf = TRUE, ellipse_B = 400, zip = TRUE) {
   mk <- function(x) { d <- file.path(dir, x); dir.create(d, recursive = TRUE, showWarnings = FALSE); d }
   Dd <- mk("data"); Td <- mk("tables"); Fd <- mk("figures"); Md <- if (methods) mk("methods") else NULL
 
@@ -113,11 +118,11 @@ export_all <- function(fit, dir = "mca_outputs", methods = TRUE, zip = TRUE) {
   ## figures: base-R PNG + PDF
   gs <- function(name, fn, w = 7, h = 6) {
     grDevices::png(file.path(Fd, paste0(name, ".png")), width = w, height = h, units = "in", res = 200); fn(); grDevices::dev.off()
-    grDevices::pdf(file.path(Fd, paste0(name, ".pdf")), width = w, height = h); fn(); grDevices::dev.off()
+    if (pdf) { grDevices::pdf(file.path(Fd, paste0(name, ".pdf")), width = w, height = h); fn(); grDevices::dev.off() }
   }
   gs("scree",      function() categorical::plot_scree(fit), 6.6, 4.6)
-  gs("map_D1D2",   function() categorical::plot_map(fit, c(1,2), bw = TRUE, ellipse = "centroid", legend = FALSE))
-  gs("map_D1D3",   function() categorical::plot_map(fit, c(1,3), bw = TRUE, ellipse = "centroid", legend = FALSE))
+  gs("map_D1D2",   function() categorical::plot_map(fit, c(1,2), bw = TRUE, ellipse = "centroid", legend = FALSE, B = ellipse_B))
+  gs("map_D1D3",   function() categorical::plot_map(fit, c(1,3), bw = TRUE, ellipse = "centroid", legend = FALSE, B = ellipse_B))
   gs("dendrogram", function() categorical::plot_dendrogram(fit, bw = TRUE), 8, 5)
 
   ## optional steps: REPORT clearly instead of swallowing, so nothing goes missing silently
@@ -126,10 +131,12 @@ export_all <- function(fit, dir = "mca_outputs", methods = TRUE, zip = TRUE) {
     if (identical(r, "ok")) message("  [ok]   ", label)
     else message("  [SKIP] ", label, " -- ", r, if (nzchar(hint)) paste0("  (", hint, ")") else "")
   }
-  step("editable EMF figures (Word: Ungroup -> moveable labels)", mca_figures(fit, Fd),
+  step("editable EMF figures (Word: Ungroup -> moveable labels)", mca_figures(fit, Fd, B = ellipse_B),
        "install.packages('devEMF')")
-  step("colour 3D MCA map + 2D projections", plot_map_3d(fit, Fd),
-       "reticulate must bind to a python with numpy/pandas/scipy/matplotlib")
+  if (three_d)
+    step("colour 3D MCA map + 2D projections", plot_map_3d(fit, Fd),
+         "reticulate must bind to a python with numpy/pandas/scipy/matplotlib")
+  else message("  [skip] colour 3D map (three_d = FALSE)")
   if (methods) step("methods documentation (tables + handbook + bib)", methods_document(Md),
                     "needs flextable + rmarkdown/pandoc")
 
