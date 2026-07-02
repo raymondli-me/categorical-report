@@ -33,8 +33,9 @@ apa_dimension_poles <- function(fit, k = 5, dims = 1:3) {
 
 #' Hierarchical cluster profiles: label, n, %, characteristic period, top codes.
 #' @param fit an mca_fit; @param k top codes per cluster.
+#' @param show_vtest append each code's v-test value, e.g. "Caregiver (v=12.0)".
 #' @export
-apa_cluster_profiles <- function(fit, k = 5) {
+apa_cluster_profiles <- function(fit, k = 5, show_vtest = FALSE) {
   lv <- levels(fit$clusters); sz <- as.integer(table(fit$clusters))
   charp <- rep(NA_character_, length(lv))
   if (!is.null(fit$group)) {
@@ -43,11 +44,15 @@ apa_cluster_profiles <- function(fit, k = 5) {
   }
   adj  <- fit$master[, paste0("adjC_", lv), drop = FALSE]
   topc <- vapply(seq_along(lv), function(ci) {
-    o <- order(adj[[ci]], decreasing = TRUE)[seq_len(k)]
-    paste(sub("^[^=]+=", "", fit$master$category[o]), collapse = "; ") }, character(1))
-  data.frame(Cluster = lv, Label = unname(fit$cluster_pretty[lv]), n = sz,
-             "%" = round(100 * sz / fit$n, 1), "Characteristic period" = charp,
-             "Top characteristic codes" = topc, check.names = FALSE)
+    o  <- order(adj[[ci]], decreasing = TRUE)[seq_len(k)]
+    nm <- sub("^[^=]+=", "", fit$master$category[o])
+    if (show_vtest) nm <- sprintf("%s (v=%.1f)", nm, adj[[ci]][o])
+    paste(nm, collapse = "; ") }, character(1))
+  df <- data.frame(Cluster = lv, Label = unname(fit$cluster_pretty[lv]), n = sz,
+                   "%" = round(100 * sz / fit$n, 1), "Characteristic period" = charp,
+                   "Top characteristic codes" = topc, check.names = FALSE)
+  if (show_vtest) names(df)[6] <- "Top characteristic codes (v-test)"
+  df
 }
 
 #' Cluster-by-group cross-tabulation (with margins).

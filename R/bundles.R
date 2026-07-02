@@ -20,6 +20,8 @@ mca_appendix <- function(fit, file = "MCA_appendix_tables.docx", prefix = "Table
     list(x = apa_dimension_poles(fit),  title = "MCA dimension poles and Benzecri-adjusted variance explained"),
     list(x = apa_cluster_profiles(fit), title = "Hierarchical cluster profiles and characteristic codes",
          note = sprintf("N = %d segments.", fit$n)),
+    list(x = apa_cluster_profiles(fit, show_vtest = TRUE), title = "Hierarchical cluster profiles with v-test values (companion)",
+         note = "Companion table: each code is followed by its v-test (adjusted residual); |v| > 1.96 is significant."),
     list(x = apa_eigenvalues(fit),      title = "Eigenvalues and retained dimensions (Benzecri-adjusted)"),
     list(x = apa_inertia_gain(fit),     title = "Cluster-count selection by between-inertia gain (HCPC)",
          note = "k is chosen at the last large gain before diminishing returns."),
