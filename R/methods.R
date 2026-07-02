@@ -101,14 +101,26 @@ methods_overview <- function(file = "methods_overview.docx", keys = NULL)
 #' equations. Falls back to a plain-text officer document if rmarkdown/pandoc is
 #' unavailable.
 #' @export
-methods_handbook <- function(file = "methods_handbook.docx", keys = NULL, native = TRUE) {
+methods_handbook <- function(file = "methods_handbook.docx", keys = NULL, native = TRUE,
+                             formats = "docx") {
   keys <- .mkeys(keys); md <- .handbook_md(keys)
+  of  <- c(docx = "word_document", html = "html_document", pdf = "pdf_document")
+  ex  <- c(word_document = "docx", html_document = "html", pdf_document = "pdf")
   if (native && requireNamespace("rmarkdown", quietly = TRUE) && rmarkdown::pandoc_available()) {
     mdf <- tempfile(fileext = ".Rmd"); writeLines(md, mdf)
     outdir <- dirname(file); if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-    rmarkdown::render(mdf, output_format = "word_document",       # existing ABSOLUTE dir + basename (render changes cwd)
-                      output_file = basename(file),
-                      output_dir  = normalizePath(outdir), quiet = TRUE)
+    base   <- sub("\\.[^.]+$", "", basename(file)); adir <- normalizePath(outdir)
+    for (ff in formats) {                                       # docx / html / pdf
+      fmt <- of[[ff]]; if (is.null(fmt)) next
+      if (ff == "pdf" && !nzchar(Sys.which("pdflatex")) &&
+          !(requireNamespace("tinytex", quietly = TRUE) && tinytex::is_tinytex())) {
+        message("  [note] PDF handbook skipped -- no LaTeX engine (run tinytex::install_tinytex())."); next }
+      tryCatch(
+        rmarkdown::render(mdf, output_format = fmt,             # existing ABSOLUTE dir + basename (render changes cwd)
+                          output_file = paste0(base, ".", ex[[fmt]]),
+                          output_dir = adir, quiet = TRUE),
+        error = function(e) message("  [note] ", ff, " handbook failed -- ", conditionMessage(e)))
+    }
   } else {                                                     # text fallback (no typeset math)
     message("  [note] handbook equations are PLAIN TEXT -- rmarkdown/pandoc not found for native Word math.")
     doc <- officer::read_docx()
@@ -127,7 +139,7 @@ methods_document <- function(dir = ".", keys = NULL) {
   k <- .mkeys(keys); f <- c()
   f <- c(f, methods_overview(file.path(dir, "methods_overview.docx"), k))
   f <- c(f, methods_tables(file.path(dir, "methods_tables.docx"), k))
-  f <- c(f, methods_handbook(file.path(dir, "methods_handbook.docx"), k))
+  f <- c(f, methods_handbook(file.path(dir, "methods_handbook.docx"), k, formats = c("docx", "html")))
   f <- c(f, write_bibliography(file.path(dir, "references.bib"), "bibtex", k))
   f <- c(f, write_bibliography(file.path(dir, "references_apa.txt"), "apa", k))
   invisible(f)
