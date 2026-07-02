@@ -45,6 +45,22 @@ save_editable(plot_map(fit, c(1,2), bw = TRUE, legend = FALSE), "map.emf")   # -
 save_editable(plot_map(fit, c(1,2)), "map.pptx", format = "pptx")            # -> PowerPoint (rvg)
 ```
 
+## Ready-made appendix tables
+
+Builders that return data.frames (compose with `apa_table` / `apa_bundle`):
+
+```r
+apa_dimension_poles(fit)    # Table 3: dimension poles + Benzecri inertia
+apa_cluster_profiles(fit)   # Table 4: cluster label, n, %, char period, top codes
+apa_eigenvalues(fit)        # scree table: eigenvalues / variance / Benzecri / cumulative
+apa_cluster_by_period(fit)  # cluster x group cross-tab (with margins)
+
+apa_bundle(list(
+  list(x = apa_dimension_poles(fit),  number = "Table 3", title = "Dimension poles"),
+  list(x = apa_cluster_profiles(fit), number = "Table 4", title = "Cluster profiles")
+), "appendix.docx")
+```
+
 ## License
 
 GPL-3. `flextable`, `gdtools`, `devEMF`, `rvg` are GPL; `officer` is MIT. `categorical` is MIT and separate.
