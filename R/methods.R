@@ -73,7 +73,7 @@ write_bibliography <- function(file = "references.bib", format = c("bibtex", "ap
       "**Code.**", "", "```r", t$code, "```", "",
       paste0("**Symbols.** ", paste(paste0("`", names(t$glossary), "` = ", unname(t$glossary)), collapse = "; ")), "",
       "**Citations.**", "",
-      paste0("- ", ci$Source, loc, " — ", ci$Aspect), "")
+      paste0("- ", ci$Reading, "  <", ci$Link, ">"), "")
   }
   out
 }
