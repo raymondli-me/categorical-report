@@ -29,7 +29,9 @@ mca_appendix <- function(fit, file = "MCA_appendix_tables.docx", prefix = "Table
          note = "Contributions sum to 100% within a dimension; sorted by peak contribution."),
     list(x = apa_cos2(fit),             title = "Squared cosines (cos2): quality of representation by dimension",
          note = "cos2 is the share of a category's inertia captured by a dimension (row Total across the 3 retained dims)."),
-    list(x = apa_coordinates(fit),      title = "Category principal coordinates by dimension"))
+    list(x = apa_coordinates(fit),      title = "Category principal coordinates by dimension"),
+    list(x = apa_category_typicality(fit), title = "Geometric typicality Z by category and dimension",
+         note = "|Z| > 1.96 = the individuals sharing the category have an atypical mean position on that axis."))
   if (!is.null(fit$group)) tabs <- c(tabs, list(
     list(x = categorical::mca_frequencies(fit, long = TRUE), title = "Frequency of coded categories by group (% within group)"),
     list(x = apa_cluster_by_period(fit),                     title = "Cluster by group distribution"),

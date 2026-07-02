@@ -158,3 +158,11 @@ apa_inertia_gain <- function(fit, digits = 1) {
   data.frame("k (clusters)" = g$k, "Between-inertia %" = round(g$between_pct, digits),
              "Gain vs k-1 (pp)" = round(g$gain, digits), check.names = FALSE, row.names = NULL)
 }
+
+#' Geometric typicality Z by category and dimension (|Z| > 1.96 = atypical).
+#' @export
+apa_category_typicality <- function(fit, digits = 2) {
+  z <- categorical::mca_category_typicality(fit)
+  data.frame(Variable = sub("=.*$", "", rownames(z)), Category = sub("^[^=]+=", "", rownames(z)),
+             round(as.data.frame.matrix(z), digits), check.names = FALSE, row.names = NULL)
+}

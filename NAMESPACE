@@ -3,4 +3,4 @@ export(apa_table, apa_bundle, save_editable,
        mca_appendix, mca_figures, plot_map_3d, export_all)
 export(methods_brief, methods_citations, methods_glossary, methods_code, methods_tables, methods_handbook, methods_bibliography, methods_equations, write_bibliography, methods_document)
 export(apa_typicality, apa_eta, apa_ellipse_overlap, apa_ari_matrix, methods_overview)
-export(apa_settings)
+export(apa_settings, apa_category_typicality)
