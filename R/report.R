@@ -29,9 +29,9 @@
   if (!is.null(link) && !is.null(urls)) {                             # clickable descriptive links
     tcol <- link$text
     ft <- flextable::compose(ft, j = tcol, part = "body",
-            value = flextable::as_paragraph(flextable::hyperlink_text(x = x[[tcol]], url = urls)))
-    ft <- flextable::color(ft, j = tcol, color = "#0563C1", part = "body")
-    ft <- flextable::underline(ft, j = tcol, part = "body")
+            value = flextable::as_paragraph(flextable::hyperlink_text(
+              x = x[[tcol]], url = urls,
+              props = officer::fp_text(color = "#0563C1", underlined = TRUE))))  # blue + underline via officer
   }
   if (!is.null(note))
     ft <- flextable::add_footer_lines(ft, values = flextable::as_paragraph(flextable::as_i("Note. "), note))
