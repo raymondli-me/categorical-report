@@ -108,6 +108,7 @@ export_all <- function(fit, dir = "mca_outputs", methods = TRUE, three_d = TRUE,
   Dd <- mk("data"); Td <- mk("tables"); Fd <- mk("figures"); Md <- if (methods) mk("methods") else NULL
 
   ## data (CSV)
+  utils::write.csv(categorical::mca_dataset(fit),      file.path(Dd, "final_dataset.csv"),   row.names = FALSE)  # the N-row analytical set actually fitted
   utils::write.csv(categorical::mca_master(fit),      file.path(Dd, "master_columns.csv"), row.names = FALSE)
   utils::write.csv(categorical::mca_master_rows(fit), file.path(Dd, "master_rows.csv"),    row.names = FALSE)
   utils::write.csv(fit$inertia,                       file.path(Dd, "inertia.csv"),        row.names = FALSE)
