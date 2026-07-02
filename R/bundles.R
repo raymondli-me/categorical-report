@@ -32,6 +32,10 @@ mca_appendix <- function(fit, file = "MCA_appendix_tables.docx", prefix = "Table
     list(x = apa_coordinates(fit),      title = "Category principal coordinates by dimension"),
     list(x = apa_category_typicality(fit), title = "Geometric typicality Z by category and dimension",
          note = "|Z| > 1.96 = the individuals sharing the category have an atypical mean position on that axis."))
+  .sup <- tryCatch(categorical::mca_supplementary(fit), error = function(e) NULL)
+  if (!is.null(.sup) && nrow(.sup)) tabs <- c(tabs, list(list(x = .sup,
+    title = "Supplementary variables projected onto the MCA axes (coords + typicality Z)",
+    note = "Excluded (non-active) variables placed on the map without shaping the axes.")))
   if (!is.null(fit$group)) tabs <- c(tabs, list(
     list(x = categorical::mca_frequencies(fit, long = TRUE), title = "Frequency of coded categories by group (% within group)"),
     list(x = apa_cluster_by_period(fit),                     title = "Cluster by group distribution"),
@@ -97,18 +101,21 @@ plot_map_3d <- function(fit, dir = ".") {
 #' @param methods include methods docs (tables + pandoc handbook + bib). Set FALSE to skip the slow pandoc step.
 #' @param three_d render the reticulate colour-3D map. Set FALSE if reticulate/python stalls.
 #' @param pdf also write PDF copies of the base-R figures (FALSE = PNG only, ~2x faster figures).
+#' @param supplementary auto-project excluded (non-active) variables as supplementary points (default TRUE).
 #' @param ellipse_B bootstrap replicates for the map confidence ellipses. Default 2000 (matches the
 #'   analysis and Efron & Tibshirani's >=1000 guidance). Lower ONLY for quick previews, never final outputs.
 #' @param zip also produce <dir>.zip.
 #' @return (invisibly) the zip path (or the directory if zip=FALSE).
 #' @export
 export_all <- function(fit, dir = "mca_outputs", methods = TRUE, three_d = TRUE,
-                       pdf = TRUE, ellipse_B = 2000, zip = TRUE) {
+                       pdf = TRUE, ellipse_B = 2000, supplementary = TRUE, zip = TRUE) {
   mk <- function(x) { d <- file.path(dir, x); dir.create(d, recursive = TRUE, showWarnings = FALSE); d }
   Dd <- mk("data"); Td <- mk("tables"); Fd <- mk("figures"); Md <- if (methods) mk("methods") else NULL
 
   ## data (CSV)
   utils::write.csv(categorical::mca_dataset(fit),      file.path(Dd, "final_dataset.csv"),   row.names = FALSE)  # the N-row analytical set actually fitted
+  if (supplementary) { .sp <- tryCatch(categorical::mca_supplementary(fit), error = function(e) NULL)
+    if (!is.null(.sp) && nrow(.sp)) utils::write.csv(.sp, file.path(Dd, "supplementary_projections.csv"), row.names = FALSE) }
   utils::write.csv(categorical::mca_master(fit),      file.path(Dd, "master_columns.csv"), row.names = FALSE)
   utils::write.csv(categorical::mca_master_rows(fit), file.path(Dd, "master_rows.csv"),    row.names = FALSE)
   utils::write.csv(fit$inertia,                       file.path(Dd, "inertia.csv"),        row.names = FALSE)
