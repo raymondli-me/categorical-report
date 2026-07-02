@@ -108,6 +108,7 @@ methods_handbook <- function(file = "methods_handbook.docx", keys = NULL, native
     rmarkdown::render(mdf, output_format = "word_document",
                       output_file = normalizePath(file, mustWork = FALSE), quiet = TRUE)
   } else {                                                     # text fallback (no typeset math)
+    message("  [note] handbook equations are PLAIN TEXT -- rmarkdown/pandoc not found for native Word math.")
     doc <- officer::read_docx()
     for (ln in md[-(1:5)]) doc <- officer::body_add_par(doc, ln)
     print(doc, target = file)
