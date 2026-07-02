@@ -119,11 +119,25 @@ export_all <- function(fit, dir = "mca_outputs", methods = TRUE, zip = TRUE) {
   gs("map_D1D2",   function() categorical::plot_map(fit, c(1,2), bw = TRUE, ellipse = "centroid", legend = FALSE))
   gs("map_D1D3",   function() categorical::plot_map(fit, c(1,3), bw = TRUE, ellipse = "centroid", legend = FALSE))
   gs("dendrogram", function() categorical::plot_dendrogram(fit, bw = TRUE), 8, 5)
-  try(mca_figures(fit, Fd), silent = TRUE)                 # editable EMF versions
-  try(plot_map_3d(fit, Fd), silent = TRUE)                 # colour 3D + 2D projections
 
-  ## methods documentation
-  if (methods) try(methods_document(Md), silent = TRUE)
+  ## optional steps: REPORT clearly instead of swallowing, so nothing goes missing silently
+  step <- function(label, expr, hint = "") {
+    r <- tryCatch({ force(expr); "ok" }, error = function(e) conditionMessage(e))
+    if (identical(r, "ok")) message("  [ok]   ", label)
+    else message("  [SKIP] ", label, " -- ", r, if (nzchar(hint)) paste0("  (", hint, ")") else "")
+  }
+  step("editable EMF figures (Word: Ungroup -> moveable labels)", mca_figures(fit, Fd),
+       "install.packages('devEMF')")
+  step("colour 3D MCA map + 2D projections", plot_map_3d(fit, Fd),
+       "reticulate must bind to a python with numpy/pandas/scipy/matplotlib")
+  if (methods) step("methods documentation (tables + handbook + bib)", methods_document(Md),
+                    "needs flextable + rmarkdown/pandoc")
+
+  ## completeness summary
+  emf <- length(list.files(Fd, pattern = "\\.emf$")); d3 <- length(list.files(Fd, pattern = "3d_color"))
+  message(sprintf("export_all: %d files written under %s/", length(list.files(dir, recursive = TRUE)), dir))
+  if (emf == 0) message("  NOTE: no editable .emf figures (install devEMF).")
+  if (d3  == 0) message("  NOTE: no colour 3D figure (check reticulate/python).")
 
   if (zip) { zf <- paste0(dir, ".zip"); if (file.exists(zf)) unlink(zf)
     try(utils::zip(zf, dir, flags = "-r9Xq"), silent = TRUE); return(invisible(zf)) }
