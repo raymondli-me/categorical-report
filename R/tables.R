@@ -135,7 +135,9 @@ apa_settings <- function(fit, extra = NULL) {
     "Min. category count (specific MCA)"  = cl$min_n,
     "Grouping variable"                   = if (is.null(cl$group)) "none" else cl$group,
     "Random seed"                         = cl$seed,
-    "Between-cluster inertia (%)"         = fit$between_inertia), extra)
+    "Between-cluster inertia (%)"         = fit$between_inertia,
+    "k-means iterations"                  = if (!is.null(fit$kmeans)) fit$kmeans$iterations else NA,
+    "k-means reassigned vs Ward"          = if (!is.null(fit$kmeans)) sprintf("%d of %d", fit$kmeans$reassigned, fit$kmeans$n) else NA), extra)
   data.frame(Setting = names(vals), Value = as.character(unlist(vals)),
              check.names = FALSE, row.names = NULL)
 }

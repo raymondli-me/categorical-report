@@ -25,6 +25,8 @@ mca_appendix <- function(fit, file = "MCA_appendix_tables.docx", prefix = "Table
     list(x = apa_eigenvalues(fit),      title = "Eigenvalues and retained dimensions (Benzecri-adjusted)"),
     list(x = apa_inertia_gain(fit),     title = "Cluster-count selection by between-inertia gain (HCPC)",
          note = "k is chosen at the last large gain before diminishing returns."),
+    list(x = categorical::mca_kmeans_info(fit), title = "k-means consolidation convergence (Hartigan-Wong)",
+         note = "Initialized at the Ward centroids; converged when no segment transfer reduces within-cluster inertia."),
     list(x = apa_contributions(fit),    title = "Category contributions to each dimension (%)",
          note = "Contributions sum to 100% within a dimension; sorted by peak contribution."),
     list(x = apa_cos2(fit),             title = "Squared cosines (cos2): quality of representation by dimension",
