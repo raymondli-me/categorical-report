@@ -1,0 +1,18 @@
+Package: categoricalReport
+Type: Package
+Title: APA Word Tables and Word-Editable Figures for 'categorical'
+Version: 0.1.0
+Authors@R: person("Raymond", "Li", role = c("aut", "cre"),
+    email = "91818244+raymondli-me@users.noreply.github.com")
+Description: One-line, natively editable APA-style Word (.docx) tables and
+    Word/PowerPoint-editable figures (EMF / DrawingML) for outputs of the MIT
+    'categorical' package. Licensed GPL-3 because it renders via flextable and
+    devEMF/rvg (GPL); 'categorical' itself stays MIT.
+License: GPL-3
+Encoding: UTF-8
+Imports: officer, flextable
+Suggests: devEMF, rvg, categorical
+Remotes: raymondli-me/categorical
+RoxygenNote: 7.3.1
+URL: https://github.com/raymondli-me/categorical-report
+BugReports: https://github.com/raymondli-me/categorical-report/issues
