@@ -69,3 +69,50 @@ plot_map_3d <- function(fit, dir = ".") {
   reticulate::py_run_file(py)
   invisible(list.files(dir, pattern = "^FIG_(cluster_map_3d_color|map_2d).*\\.png$", full.names = TRUE))
 }
+
+#' One call: write ALL outputs into an organized folder and zip it.
+#'
+#' Layout: <dir>/data (CSV masters, inertia, frequencies), <dir>/tables (appendix
+#' .docx), <dir>/figures (scree/maps/dendrogram/3D as PNG+PDF, plus editable EMF),
+#' <dir>/methods (methods tables + handbook + bibliography). Returns the .zip path.
+#'
+#' @param fit an mca_fit; @param dir output folder; @param methods include methods docs;
+#' @param zip also produce <dir>.zip.
+#' @return (invisibly) the zip path (or the directory if zip=FALSE).
+#' @export
+export_all <- function(fit, dir = "mca_outputs", methods = TRUE, zip = TRUE) {
+  mk <- function(x) { d <- file.path(dir, x); dir.create(d, recursive = TRUE, showWarnings = FALSE); d }
+  Dd <- mk("data"); Td <- mk("tables"); Fd <- mk("figures"); Md <- if (methods) mk("methods") else NULL
+
+  ## data (CSV)
+  utils::write.csv(categorical::mca_master(fit),      file.path(Dd, "master_columns.csv"), row.names = FALSE)
+  utils::write.csv(categorical::mca_master_rows(fit), file.path(Dd, "master_rows.csv"),    row.names = FALSE)
+  utils::write.csv(fit$inertia,                       file.path(Dd, "inertia.csv"),        row.names = FALSE)
+  utils::write.csv(fit$gain_tab,                      file.path(Dd, "inertia_gain.csv"),   row.names = FALSE)
+  if (!is.null(fit$group)) {
+    utils::write.csv(categorical::mca_frequencies(fit, long = TRUE), file.path(Dd, "frequency_by_group.csv"), row.names = FALSE)
+    utils::write.csv(categorical::mca_distribution(fit),            file.path(Dd, "segment_distribution.csv"), row.names = FALSE)
+  }
+
+  ## tables (Word)
+  mca_appendix(fit, file.path(Td, "appendix_tables.docx"))
+
+  ## figures: base-R PNG + PDF
+  gs <- function(name, fn, w = 7, h = 6) {
+    grDevices::png(file.path(Fd, paste0(name, ".png")), width = w, height = h, units = "in", res = 200); fn(); grDevices::dev.off()
+    grDevices::pdf(file.path(Fd, paste0(name, ".pdf")), width = w, height = h); fn(); grDevices::dev.off()
+  }
+  gs("scree",      function() categorical::plot_scree(fit), 6.6, 4.6)
+  gs("map_D1D2",   function() categorical::plot_map(fit, c(1,2), bw = TRUE, ellipse = "centroid", legend = FALSE))
+  gs("map_D1D3",   function() categorical::plot_map(fit, c(1,3), bw = TRUE, ellipse = "centroid", legend = FALSE))
+  gs("dendrogram", function() categorical::plot_dendrogram(fit), 8, 5)
+  try(mca_figures(fit, Fd), silent = TRUE)                 # editable EMF versions
+  try(plot_map_3d(fit, Fd), silent = TRUE)                 # colour 3D + 2D projections
+
+  ## methods documentation
+  if (methods) try(methods_document(Md), silent = TRUE)
+
+  if (zip) { zf <- paste0(dir, ".zip"); if (file.exists(zf)) unlink(zf)
+    try(utils::zip(zf, dir, flags = "-r9Xq"), silent = TRUE); return(invisible(zf)) }
+  invisible(dir)
+}

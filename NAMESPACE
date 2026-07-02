@@ -1,4 +1,4 @@
 export(apa_table, apa_bundle, save_editable,
        apa_eigenvalues, apa_dimension_poles, apa_cluster_profiles, apa_cluster_by_period,
-       mca_appendix, mca_figures, plot_map_3d)
+       mca_appendix, mca_figures, plot_map_3d, export_all)
 export(methods_brief, methods_citations, methods_glossary, methods_code, methods_tables, methods_handbook, write_bibliography, methods_document)
