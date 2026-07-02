@@ -1,1 +1,1 @@
-export(apa_table, save_editable)
+export(apa_table, apa_bundle, save_editable)
