@@ -6,8 +6,14 @@
 # =============================================================================
 
 # internal: build one APA-styled flextable from a data.frame
-.apa_ft <- function(x, cols = NULL, digits = 2, headers = NULL, note = NULL) {
+# link = list(text = "<column shown as the clickable anchor>", url = "<column holding the URL>")
+#   -> the url column is dropped from view and the text column becomes a clickable,
+#      descriptive hyperlink. align defaults to "left" (APA).
+.apa_ft <- function(x, cols = NULL, digits = 2, headers = NULL, note = NULL,
+                    align = "left", link = NULL) {
   x <- as.data.frame(x, check.names = FALSE)
+  urls <- NULL
+  if (!is.null(link)) { urls <- x[[link$url]]; x[[link$url]] <- NULL }  # hold URLs, hide the column
   if (!is.null(cols))    x <- x[, cols, drop = FALSE]
   isnum <- vapply(x, is.numeric, logical(1)); x[isnum] <- lapply(x[isnum], round, digits)
   if (!is.null(headers)) names(x)[match(names(headers), names(x))] <- unname(headers)
@@ -19,8 +25,14 @@
   ft <- flextable::hline_top(ft, part = "header", border = bd)
   ft <- flextable::hline_bottom(ft, part = "header", border = bd)
   ft <- flextable::hline_bottom(ft, part = "body", border = bd)
-  ft <- flextable::align(ft, part = "header", align = "left")
-  if (any(isnum)) ft <- flextable::align(ft, j = which(isnum), align = "right", part = "body")
+  ft <- flextable::align(ft, part = "all", align = align)              # APA: left-align throughout
+  if (!is.null(link) && !is.null(urls)) {                             # clickable descriptive links
+    tcol <- link$text
+    ft <- flextable::compose(ft, j = tcol, part = "body",
+            value = flextable::as_paragraph(flextable::hyperlink_text(x = x[[tcol]], url = urls)))
+    ft <- flextable::color(ft, j = tcol, color = "#0563C1", part = "body")
+    ft <- flextable::underline(ft, j = tcol, part = "body")
+  }
   if (!is.null(note))
     ft <- flextable::add_footer_lines(ft, values = flextable::as_paragraph(flextable::as_i("Note. "), note))
   flextable::set_table_properties(ft, layout = "autofit")
@@ -51,8 +63,10 @@
 #' @return (invisibly) the file path.
 #' @export
 apa_table <- function(x, file, title = "", number = "Table 1", note = NULL,
-                      cols = NULL, digits = 2, headers = NULL, landscape = FALSE) {
-  ft  <- .apa_ft(x, cols = cols, digits = digits, headers = headers, note = note)
+                      cols = NULL, digits = 2, headers = NULL, landscape = FALSE,
+                      align = "left", link = NULL) {
+  ft  <- .apa_ft(x, cols = cols, digits = digits, headers = headers, note = note,
+                 align = align, link = link)
   doc <- .add_block(officer::read_docx(), ft, number, title)
   if (landscape) doc <- officer::body_end_section_landscape(doc)
   print(doc, target = file); invisible(file)
@@ -70,7 +84,8 @@ apa_bundle <- function(tables, file, landscape = FALSE) {
   doc <- officer::read_docx()
   for (t in tables) {
     ft  <- .apa_ft(t$x, cols = t$cols, digits = if (is.null(t$digits)) 2 else t$digits,
-                   headers = t$headers, note = t$note)
+                   headers = t$headers, note = t$note,
+                   align = if (is.null(t$align)) "left" else t$align, link = t$link)
     doc <- .add_block(doc, ft,
                       number = if (is.null(t$number)) "Table" else t$number,
                       title  = if (is.null(t$title))  ""      else t$title)

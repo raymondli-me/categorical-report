@@ -58,3 +58,36 @@ apa_cluster_by_period <- function(fit) {
   tb <- addmargins(table(Cluster = fit$clusters, Period = fit$group))
   data.frame(Cluster = rownames(tb), as.data.frame.matrix(tb), check.names = FALSE, row.names = NULL)
 }
+
+#' Category contributions to each dimension (%, sum to 100 per dimension).
+#' @param fit an mca_fit; @param digits rounding; @param sort by peak contribution.
+#' @export
+apa_contributions <- function(fit, digits = 1, sort = TRUE) {
+  m <- fit$master
+  d <- data.frame(Variable = sub("=.*$", "", m$category), Category = sub("^[^=]+=", "", m$category),
+                  D1 = round(100 * m$ctr_D1, digits), D2 = round(100 * m$ctr_D2, digits),
+                  D3 = round(100 * m$ctr_D3, digits), check.names = FALSE)
+  if (sort) d <- d[order(-pmax(d$D1, d$D2, d$D3)), ]
+  rownames(d) <- NULL; d
+}
+
+#' Squared cosines (cos2, quality of representation) per dimension.
+#' @param fit an mca_fit; @param digits rounding.
+#' @export
+apa_cos2 <- function(fit, digits = 3) {
+  m <- fit$master
+  data.frame(Variable = sub("=.*$", "", m$category), Category = sub("^[^=]+=", "", m$category),
+             D1 = round(m$cos2_D1, digits), D2 = round(m$cos2_D2, digits), D3 = round(m$cos2_D3, digits),
+             Total = round(m$cos2_D1 + m$cos2_D2 + m$cos2_D3, digits),
+             check.names = FALSE, row.names = NULL)
+}
+
+#' Category principal coordinates per dimension.
+#' @param fit an mca_fit; @param digits rounding.
+#' @export
+apa_coordinates <- function(fit, digits = 3) {
+  m <- fit$master
+  data.frame(Variable = sub("=.*$", "", m$category), Category = sub("^[^=]+=", "", m$category),
+             D1 = round(m$coord_D1, digits), D2 = round(m$coord_D2, digits), D3 = round(m$coord_D3, digits),
+             check.names = FALSE, row.names = NULL)
+}
