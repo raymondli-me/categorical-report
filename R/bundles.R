@@ -59,7 +59,7 @@ mca_figures <- function(fit, dir = ".", format = c("emf", "pptx")) {
                           file.path(dir, paste0("Fig_map_D1D2.", ext)),   format, 7, 6.6))
   f <- c(f, save_editable(categorical::plot_map(fit, c(1,3), bw = TRUE, ellipse = "centroid", legend = FALSE),
                           file.path(dir, paste0("Fig_map_D1D3.", ext)),   format, 7, 6.6))
-  f <- c(f, save_editable(categorical::plot_dendrogram(fit),
+  f <- c(f, save_editable(categorical::plot_dendrogram(fit, bw = TRUE),
                           file.path(dir, paste0("Fig_dendrogram.", ext)), format, 7, 5))
   invisible(f)
 }
@@ -118,7 +118,7 @@ export_all <- function(fit, dir = "mca_outputs", methods = TRUE, zip = TRUE) {
   gs("scree",      function() categorical::plot_scree(fit), 6.6, 4.6)
   gs("map_D1D2",   function() categorical::plot_map(fit, c(1,2), bw = TRUE, ellipse = "centroid", legend = FALSE))
   gs("map_D1D3",   function() categorical::plot_map(fit, c(1,3), bw = TRUE, ellipse = "centroid", legend = FALSE))
-  gs("dendrogram", function() categorical::plot_dendrogram(fit), 8, 5)
+  gs("dendrogram", function() categorical::plot_dendrogram(fit, bw = TRUE), 8, 5)
   try(mca_figures(fit, Fd), silent = TRUE)                 # editable EMF versions
   try(plot_map_3d(fit, Fd), silent = TRUE)                 # colour 3D + 2D projections
 
