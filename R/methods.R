@@ -147,15 +147,38 @@ methods_bibliography <- function(file = "references.docx", keys = NULL, formats 
   .render_md(md, file, formats, native = TRUE, label = "bibliography")
 }
 
+#' Key-equations + symbol tables with REAL math -> Word/HTML/PDF (pandoc, not flextable).
+#'
+#' flextable cannot hold equations in a cell; this renders markdown tables where the
+#' formula/symbol cells are `$...$`, so pandoc emits native math (OMML in Word,
+#' MathJax in HTML, LaTeX in PDF).
+#' @param file output path; @param formats any of "docx","html","pdf".
+#' @export
+methods_equations <- function(file = "methods_equations.docx", keys = NULL, formats = c("docx", "html")) {
+  k   <- .mkeys(keys)
+  esc <- function(x) gsub("\\|", "\\\\|", x)                    # protect any literal pipe in a cell
+  eqr <- vapply(k, function(kk) { t <- categorical::mca_technique(kk)
+    paste0("| ", esc(t$name), " | $", esc(t$formula), "$ |") }, character(1))
+  gl  <- categorical::mca_glossary(k)
+  glr <- paste0("| $", esc(gl$Symbol), "$ | ", esc(gl$Meaning), " |")
+  md  <- c("---", "title: 'Methods: key equations and symbols'", "---", "",
+           "## Key equation per technique", "",
+           "| Technique | Key equation |", "|-----------|--------------|", eqr, "",
+           "## Symbol glossary", "",
+           "| Symbol | Meaning |", "|--------|---------|", glr)
+  .render_md(md, file, formats, native = TRUE, label = "equations")
+}
+
 #' One-shot: write the whole methodology documentation set to a directory.
 #'
-#' methods_overview/tables (docx), handbook (docx+html+pdf, native equations),
-#' formatted APA references (docx+html+pdf), and references.bib (for managers).
+#' methods_overview/tables (docx), handbook + equation-tables + references
+#' (docx+html+pdf, native math), and references.bib (for managers).
 #' @export
 methods_document <- function(dir = ".", keys = NULL) {
   k <- .mkeys(keys); f <- c()
   f <- c(f, methods_overview(file.path(dir, "methods_overview.docx"), k))
   f <- c(f, methods_tables(file.path(dir, "methods_tables.docx"), k))
+  f <- c(f, methods_equations(file.path(dir, "methods_equations.docx"), k, formats = c("docx", "html", "pdf")))
   f <- c(f, methods_handbook(file.path(dir, "methods_handbook.docx"), k, formats = c("docx", "html", "pdf")))
   f <- c(f, methods_bibliography(file.path(dir, "references.docx"), k, formats = c("docx", "html", "pdf")))
   f <- c(f, write_bibliography(file.path(dir, "references.bib"), "bibtex", k))   # machine-readable for Zotero/BibTeX
