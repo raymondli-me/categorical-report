@@ -1,2 +1,3 @@
 export(apa_table, apa_bundle, save_editable,
-       apa_eigenvalues, apa_dimension_poles, apa_cluster_profiles, apa_cluster_by_period)
+       apa_eigenvalues, apa_dimension_poles, apa_cluster_profiles, apa_cluster_by_period,
+       mca_appendix, mca_figures, plot_map_3d)
