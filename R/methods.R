@@ -101,46 +101,63 @@ methods_overview <- function(file = "methods_overview.docx", keys = NULL)
 #' equations. Falls back to a plain-text officer document if rmarkdown/pandoc is
 #' unavailable.
 #' @export
-methods_handbook <- function(file = "methods_handbook.docx", keys = NULL, native = TRUE,
-                             formats = "docx") {
-  keys <- .mkeys(keys); md <- .handbook_md(keys)
-  of  <- c(docx = "word_document", html = "html_document", pdf = "pdf_document")
-  ex  <- c(word_document = "docx", html_document = "html", pdf_document = "pdf")
+# shared renderer: a markdown string -> docx / html / pdf via pandoc, with the
+# cwd-safe output path, a LaTeX guard for pdf, and a plain-text officer fallback.
+.render_md <- function(md, file, formats = "docx", native = TRUE, label = "document") {
+  of <- c(docx = "word_document", html = "html_document", pdf = "pdf_document")
+  ex <- c(word_document = "docx", html_document = "html", pdf_document = "pdf")
   if (native && requireNamespace("rmarkdown", quietly = TRUE) && rmarkdown::pandoc_available()) {
     mdf <- tempfile(fileext = ".Rmd"); writeLines(md, mdf)
     outdir <- dirname(file); if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-    base   <- sub("\\.[^.]+$", "", basename(file)); adir <- normalizePath(outdir)
-    for (ff in formats) {                                       # docx / html / pdf
+    base <- sub("\\.[^.]+$", "", basename(file)); adir <- normalizePath(outdir)
+    for (ff in formats) {
       fmt <- of[[ff]]; if (is.null(fmt)) next
       if (ff == "pdf" && !nzchar(Sys.which("pdflatex")) &&
           !(requireNamespace("tinytex", quietly = TRUE) && tinytex::is_tinytex())) {
-        message("  [note] PDF handbook skipped -- no LaTeX engine (run tinytex::install_tinytex())."); next }
+        message("  [note] PDF ", label, " skipped -- no LaTeX engine (run tinytex::install_tinytex())."); next }
       tryCatch(
-        rmarkdown::render(mdf, output_format = fmt,             # existing ABSOLUTE dir + basename (render changes cwd)
-                          output_file = paste0(base, ".", ex[[fmt]]),
+        rmarkdown::render(mdf, output_format = fmt, output_file = paste0(base, ".", ex[[fmt]]),
                           output_dir = adir, quiet = TRUE),
-        error = function(e) message("  [note] ", ff, " handbook failed -- ", conditionMessage(e)))
+        error = function(e) message("  [note] ", ff, " ", label, " failed -- ", conditionMessage(e)))
     }
-  } else {                                                     # text fallback (no typeset math)
-    message("  [note] handbook equations are PLAIN TEXT -- rmarkdown/pandoc not found for native Word math.")
-    doc <- officer::read_docx()
-    for (ln in md[-(1:5)]) doc <- officer::body_add_par(doc, ln)
+  } else {                                                     # plain-text officer fallback
+    message("  [note] ", label, " is PLAIN TEXT -- rmarkdown/pandoc not found.")
+    doc <- officer::read_docx(); for (ln in md[!grepl("^---", md)]) doc <- officer::body_add_par(doc, ln)
     print(doc, target = file)
   }
   invisible(file)
 }
 
+#' Full methods handbook (one section per technique, native equations) -> docx/html/pdf.
+#' @export
+methods_handbook <- function(file = "methods_handbook.docx", keys = NULL, native = TRUE,
+                             formats = "docx")
+  .render_md(.handbook_md(.mkeys(keys)), file, formats, native, label = "handbook")
+
+#' Formatted APA reference list -> Word/HTML/PDF (hanging indent, clickable links).
+#' @param file output path; @param formats any of "docx","html","pdf".
+#' @export
+methods_bibliography <- function(file = "references.docx", keys = NULL, formats = "docx") {
+  refs <- categorical::mca_bibliography(.mkeys(keys), format = "apa")   # APA strings (with DOI/Scholar URL)
+  linked <- gsub("(https?://[^ ]+)", "[\\1](\\1)", refs)                # make the trailing URL clickable
+  md <- c("---", "title: 'References'", "---", "",
+          "# References", "",
+          "::: {style=\"padding-left:2em; text-indent:-2em;\"}", "",   # hanging indent (html)
+          paste0(linked, "\n"), ":::")
+  .render_md(md, file, formats, native = TRUE, label = "bibliography")
+}
+
 #' One-shot: write the whole methodology documentation set to a directory.
 #'
-#' Produces methods_tables.docx (brief + citations + glossary + code), the
-#' handbook (native equations), and references.bib + references_apa.txt.
+#' methods_overview/tables (docx), handbook (docx+html+pdf, native equations),
+#' formatted APA references (docx+html+pdf), and references.bib (for managers).
 #' @export
 methods_document <- function(dir = ".", keys = NULL) {
   k <- .mkeys(keys); f <- c()
   f <- c(f, methods_overview(file.path(dir, "methods_overview.docx"), k))
   f <- c(f, methods_tables(file.path(dir, "methods_tables.docx"), k))
   f <- c(f, methods_handbook(file.path(dir, "methods_handbook.docx"), k, formats = c("docx", "html", "pdf")))
-  f <- c(f, write_bibliography(file.path(dir, "references.bib"), "bibtex", k))
-  f <- c(f, write_bibliography(file.path(dir, "references_apa.txt"), "apa", k))
+  f <- c(f, methods_bibliography(file.path(dir, "references.docx"), k, formats = c("docx", "html", "pdf")))
+  f <- c(f, write_bibliography(file.path(dir, "references.bib"), "bibtex", k))   # machine-readable for Zotero/BibTeX
   invisible(f)
 }
